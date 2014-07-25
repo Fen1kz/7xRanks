@@ -13,7 +13,15 @@ class Ranks {
     
     public function get_top($top = null) {
         $result = $this->players;
-        usort($result, function ($player1, $player2) {
+        usort($result, array($this, 'get_top_sort'));
+        if ($top === null) {
+            return $result;
+        } else {
+            return array_slice($result, 0, $top);
+        }
+    }
+    
+    protected function get_top_sort ($player1, $player2) {
             $league1 = $this->league_to_int($player1['1x1ladder']['league']);
             $league2 = $this->league_to_int($player2['1x1ladder']['league']);
             if ($league1 != $league2) {
@@ -21,13 +29,7 @@ class Ranks {
             } else {
                 return ($player1['1x1ladder']['points'] > $player2['1x1ladder']['points']) ? -1 : 1;
             }
-        });
-        if ($top === null) {
-            return $result;
-        } else {
-            return array_slice($result, 0, $top);
         }
-    }
     
     public static function league_to_int($league_name) {
         switch ($league_name) {
