@@ -59,7 +59,7 @@ $output = '';
             <img src="<?php echo $player['out']['race_image'];?>" alt="<?php echo $player['out']['race'];?>" title="<?php echo $player['out']['race'];?>" width="9" height="14">
         </td>
 		<td class="tip_trigger">
-			<div class="minitext" style="width: 740px; overflow:hidden;">
+			<div class="minitext" style="width: 74px; overflow:hidden;">
                 <a href="<?php echo $player['out']['href'];?>" target="_blank" rel="nofollow"><?php echo $player['out']['display_name'];?></a>
 				<div class="tip">
 		            <table>
