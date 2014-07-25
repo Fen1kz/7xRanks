@@ -8,9 +8,10 @@ class Ranks {
         $this->players = $this->init_players($players);
         $this->config = $config;
         $this->update_ranks();
+        //$this->log($this->players);
     }
     
-    public function get_top($top = 10) {
+    public function get_top($top = null) {
         $result = $this->players;
         usort($result, function ($player1, $player2) {
             $league1 = $this->league_to_int($player1['1x1ladder']['league']);
@@ -21,7 +22,11 @@ class Ranks {
                 return ($player1['1x1ladder']['points'] > $player2['1x1ladder']['points']) ? -1 : 1;
             }
         });
-        return array_slice($result, 0, $top);
+        if ($top === null) {
+            return $result;
+        } else {
+            return array_slice($result, 0, $top);
+        }
     }
     
     public static function league_to_int($league_name) {
@@ -41,9 +46,65 @@ class Ranks {
     public function update_ranks() {
         $this->request_players_info();
         $this->request_ladders_info();
-        //$this->log($this->players);
+        $this->prepare_to_out();
     }
     
+    protected function prepare_to_out() {
+        foreach($this->players as &$player) {
+            $player['out'] = [];
+            $player['out']['pts']    = $player['1x1ladder']['points'];
+            $player['out']['wins']   = $player['1x1ladder']['wins'];
+            $player['out']['losses'] = $player['1x1ladder']['losses'];
+            $wins = (int) $player['1x1ladder']['wins'];
+            $losses = (int) $player['1x1ladder']['losses'];
+            $player['out']['rate']   = number_format((($wins != 0) ? ($wins / ($wins+$losses)) * 100 : 0), 2);
+            $player['out']['race']   = strtolower($player['1x1ladder']['favoriteRaceP1']);
+            $player['out']['league'] = strtolower($player['1x1ladder']['league']);
+            $player['out']['race_image'] = $this->out_get_race_img_src($player['out']['race']);
+            
+            $player['out']['href'] = 'http://'.$this->config['host'] .'/sc2/en/'. $player['link'] .'/';
+            $player['out']['display_name'] = '[7x]'. $player['name'];
+            $player['out']['league_image'] = $this->out_get_league_img_src($player['out']['league'], $player['1x1ladder']['rank']);
+        }
+    }
+    
+    protected function out_get_race_img_src($race) {
+        if ($race != null) {
+            return $this->config['images']['races_images_url'].$this->config['images']['races'][$race];
+        } else {
+            return null;
+        }
+    }
+    
+    protected function out_get_league_img_src($league, $rank) {
+        if ($league != null) {
+            if (isset($this->config['images']['leagues'][$league])) {
+                $img_src = null;
+                if ($league == 'grandmaster') {
+                    $img_src = $this->out_get_league_img_src_helper($league, $rank, 16, 50, 100);
+                } else {
+                    $img_src = $this->out_get_league_img_src_helper($league, $rank, 8, 25, 50);
+                }
+                return $this->config['images']['leagues_images_url'] . $img_src;
+            }
+        }
+        return null;
+    }
+    
+    protected function out_get_league_img_src_helper($league, $rank, $rank1, $rank2, $rank3) {
+        if ($rank != 0 && $rank < $rank1 && isset($this->config['images']['leagues'][$league]['top'.$rank1])) {
+            $img_src = $this->config['images']['leagues'][$league]['top'.$rank1];
+        } else if ($rank != 0 && $rank < $rank2 && isset($this->config['images']['leagues'][$league]['top'.$rank2])) {
+            $img_src = $this->config['images']['leagues'][$league]['top'.$rank2];
+        } else if ($rank != 0 && $rank < $rank3 && isset($this->config['images']['leagues'][$league]['top'.$rank3])) {
+            $img_src = $this->config['images']['leagues'][$league]['top'.$rank3];
+        } else {
+            $img_src = $this->config['images']['leagues'][$league]['default'];
+        }
+        return $img_src;
+    }
+
+
     protected function request_players_info() {
         $urls = [];
         foreach($this->players as $id => $player) {
@@ -130,7 +191,12 @@ class Ranks {
     
     protected function init_players($players) {
         $return_array;
-        foreach($players as $input_link) {
+        foreach($players as $player) {
+            if (!isset($player['link'])) {
+                $this->error('Player doesn\'t have link field', $player);
+                continue;
+            }
+            $input_link = $player['link'];
             //$this->log('processing '. $input_link);
             $link_array = [];
             preg_match("/.*(profile\/\d+\/\d+\/.*)\//", $input_link, $link_array);
@@ -139,10 +205,13 @@ class Ranks {
                 preg_match("/profile\/(\d+)\/(\d+)\/(.*)/", $link_array[1], $player_array);
                 
                 $return_array[] = [
+                    'name'  => (isset($player['name'])) ? $player['name'] : urldecode($player_array[3]),
+                    'metka' => (isset($player['metka'])) ? $player['metka'] : '',
+                    'flag'  => (isset($player['flag'])) ? $player['flag'] : '!None.gif',
+                    'nickname' => urldecode($player_array[3]),
                     'link'  => $player_array[0],
                     'id'    => $player_array[1],
                     'realm' => $player_array[2],
-                    'nickname' => urldecode($player_array[3]),
                     ];
                 
                 
@@ -182,18 +251,29 @@ class Ranks {
         return $results;
     }
     
-    protected function log ($msg) {
+    protected function log () {
+        $args = func_get_args();
         echo '<pre>';
-        if (is_array($msg)) {
-            print_r($msg);
-        } else
-            echo $msg . '<br>';
+        foreach ($args as $arg) {
+            if (is_array($arg)) {
+                print_r($arg);
+            } else {
+                echo $arg;
+            }
+        }
         echo '</pre>';
     }
     
-    protected function error ($msg) {
+    protected function error () {
+        $args = func_get_args();
         echo '<pre>';
-        echo $msg . '<br>';
+        foreach ($args as $arg) {
+            if (is_array($arg)) {
+                print_r($arg);
+            } else {
+                echo $arg;
+            }
+        }
         echo '</pre>';
     }
 }
