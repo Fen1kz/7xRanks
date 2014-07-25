@@ -1,7 +1,7 @@
 <?php
 
 class Ranks {
-    private $players = [];
+    private $players = array();
     private $config;
     
     function __construct($players, $config) {
@@ -51,7 +51,7 @@ class Ranks {
     
     protected function prepare_to_out() {
         foreach($this->players as &$player) {
-            $player['out'] = [];
+            $player['out'] = array();
             $player['out']['pts']    = $player['1x1ladder']['points'];
             $player['out']['wins']   = $player['1x1ladder']['wins'];
             $player['out']['losses'] = $player['1x1ladder']['losses'];
@@ -106,7 +106,7 @@ class Ranks {
 
 
     protected function request_players_info() {
-        $urls = [];
+        $urls = array();
         foreach($this->players as $id => $player) {
             $urls[$id] = $this->config['host'] .'/api/sc2/'. $player['link'] .'/ladders';
             //$this->log('requesting player ' . $urls[$id]);
@@ -128,7 +128,7 @@ class Ranks {
     
     
     protected function request_ladders_info() {
-        $urls = [];        
+        $urls = array();        
         foreach($this->players as $id => $player) {
             if ($player['1x1ladder']['ladderId'] === null) {
                 continue;
@@ -161,7 +161,7 @@ class Ranks {
                     return $ladder;
             }
         }
-        return [
+        return array(
             'ladderName' => null,
             'ladderId'   => null,
             'division'   => null,
@@ -176,7 +176,7 @@ class Ranks {
             'highestRank'    => null,
             'previousRank'   => null,
             'favoriteRaceP1' => null,
-        ];
+        );
     }
     
     protected function get_player_from_ladder ($ladderMembers, $player) {
@@ -198,13 +198,13 @@ class Ranks {
             }
             $input_link = $player['link'];
             //$this->log('processing '. $input_link);
-            $link_array = [];
+            $link_array = array();
             preg_match("/.*(profile\/\d+\/\d+\/.*)\//", $input_link, $link_array);
             if (isset($link_array[1])) {                
-                $player_array = [];
+                $player_array = array();
                 preg_match("/profile\/(\d+)\/(\d+)\/(.*)/", $link_array[1], $player_array);
                 
-                $return_array[] = [
+                $return_array[] = array(
                     'name'  => (isset($player['name'])) ? $player['name'] : urldecode($player_array[3]),
                     'metka' => (isset($player['metka'])) ? $player['metka'] : '',
                     'flag'  => (isset($player['flag'])) ? $player['flag'] : '!None.gif',
@@ -212,7 +212,7 @@ class Ranks {
                     'link'  => $player_array[0],
                     'id'    => $player_array[1],
                     'realm' => $player_array[2],
-                    ];
+                    );
                 
                 
             } else {
@@ -226,8 +226,8 @@ class Ranks {
     
     protected function multicurl ($urls) {
         $mh = curl_multi_init();
-        $curly = [];
-        $results = [];
+        $curly = array();
+        $results = array();
         
         foreach($urls as $id => $url) {
             $curly[$id] = curl_init();
