@@ -13,33 +13,46 @@ class Ranks {
     
     public function get_top($top = null) {
         $result = $this->players;
-        usort($result, array($this, 'get_top_sort'));
-        if ($top === null) {
-            return $result;
-        } else {
-            return array_slice($result, 0, $top);
+        usort($result, array($this, 'get_top_sort')); // cuz of php 5.2 =\
+        if ($top !== null) {
+            $result = array_slice($result, 0, $top);
         }
+        $result = array_filter($result, array($this, 'get_top_filter')); // cuz of php 5.2 =\
+        return $result;
     }
     
     protected function get_top_sort ($player1, $player2) {
-            $league1 = $this->league_to_int($player1['1x1ladder']['league']);
-            $league2 = $this->league_to_int($player2['1x1ladder']['league']);
-            if ($league1 != $league2) {
-                return ($league1 > $league2) ? -1 : 1;
-            } else {
-                return ($player1['1x1ladder']['points'] > $player2['1x1ladder']['points']) ? -1 : 1;
-            }
+        $league1 = $this->league_to_int($player1['1x1ladder']['league']);
+        $league2 = $this->league_to_int($player2['1x1ladder']['league']);
+        if ($league1 != $league2) {
+            return ($league1 > $league2) ? -1 : 1;
+        } else {
+            return ($player1['1x1ladder']['points'] > $player2['1x1ladder']['points']) ? -1 : 1;
         }
+    }
     
+    protected function get_top_filter ($player) {
+        $league = $this->league_to_int($player['1x1ladder']['league']);
+        if ($league < $this->league_to_int($this->config['output']['league']))
+            return false;
+        
+        if (!$this->config['output']['allow0pts'] && $player['1x1ladder']['points'] == 0) {
+            return false;
+        }
+        
+        return true;
+    }
+    
+   
     public static function league_to_int($league_name) {
-        switch ($league_name) {
-            case 'BRONZE':      $league = 1; break;
-            case 'SILVER':      $league = 2; break;
-            case 'GOLD':        $league = 3; break;
-            case 'PLATINUM':    $league = 4; break;
-            case 'DIAMOND':     $league = 5; break;
-            case 'MASTER':      $league = 6; break;
-            case 'GRANDMASTER': $league = 7; break;
+        switch (strtolower($league_name)) {
+            case 'bronze':      $league = 1; break;
+            case 'silver':      $league = 2; break;
+            case 'gold':        $league = 3; break;
+            case 'platinum':    $league = 4; break;
+            case 'diamond':     $league = 5; break;
+            case 'master':      $league = 6; break;
+            case 'grandmaster': $league = 7; break;
             default: $league = 0;        
         }
         return $league;
@@ -54,6 +67,10 @@ class Ranks {
     protected function prepare_to_out() {
         foreach($this->players as &$player) {
             $player['out'] = array();
+            $player['out']['nickname'] = $player['nickname'];
+            $player['out']['flag'] = $player['flag'];
+            $player['out']['metka'] = (($player['metka'] != '') ? '.'.$player['metka'] : '');
+            
             $player['out']['pts']    = $player['1x1ladder']['points'];
             $player['out']['wins']   = $player['1x1ladder']['wins'];
             $player['out']['losses'] = $player['1x1ladder']['losses'];
@@ -254,28 +271,32 @@ class Ranks {
     }
     
     protected function log () {
+        $output = array();
         $args = func_get_args();
         echo '<pre>';
         foreach ($args as $arg) {
             if (is_array($arg)) {
-                print_r($arg);
+                $output[] .= print_r($arg, true);
             } else {
-                echo $arg;
+                $output[] .= $arg;
             }
         }
+        echo implode(', ', $output);
         echo '</pre>';
     }
     
     protected function error () {
+        $output = array();
         $args = func_get_args();
         echo '<pre>';
         foreach ($args as $arg) {
             if (is_array($arg)) {
-                print_r($arg);
+                $output[] .= print_r($arg, true);
             } else {
-                echo $arg;
+                $output[] .= $arg;
             }
         }
+        echo implode(', ', $output);
         echo '</pre>';
     }
 }
