@@ -2,3 +2,5 @@ roster.php
 template.php
 config.php
 *.html
+nbproject/
+rating/
