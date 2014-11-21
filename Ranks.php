@@ -263,9 +263,16 @@ class Ranks {
         } while($running > 0);
         
         foreach($curly as $id => $ch) {
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            if($httpCode != 200) {
+                $this->error("Error while getting url [$urls[$id]], response Code [$httpCode]");
+            }
+            
             $results[$id] = curl_multi_getcontent($ch);
+        
             curl_multi_remove_handle($mh, $ch);
         }
+        
         curl_multi_close($mh);
         return $results;
     }
