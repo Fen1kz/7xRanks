@@ -1,10 +1,10 @@
 <?php
 require 'Ranks.php';
-
 $roster = require 'roster.php';
-
 $config = require 'config.php';
-$ranks = new Ranks($roster, $config);
+
+$ranks = new Ranks($roster, $config, (isset($_GET['debug'])) ? $_GET['debug'] == "1" : false);
+
 $data = $ranks->get_top(null, 'grandmaster');
 
 $output = '';

@@ -3,10 +3,12 @@
 class Ranks {
     private $players = array();
     private $config;
+    private $debug = false;
     
-    function __construct($players, $config) {
+    function __construct($players, $config, $debug = true) {
         $this->players = $this->init_players($players);
         $this->config = $config;
+        $this->debug = $debug;
         $this->update_ranks();
         //$this->log($this->players);
     }
@@ -264,11 +266,17 @@ class Ranks {
         
         foreach($curly as $id => $ch) {
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            if($httpCode != 200) {
-                $this->error("Error while getting url [$urls[$id]], response Code [$httpCode]");
+                       
+            $results[$id] = curl_multi_getcontent($ch);
+            
+            if (!$this->debug) {
+                if ($httpCode != 200) {
+                    $this->error("Error while getting url [$urls[$id]], response Code [$httpCode]");
+                }
+            } else {
+                $this->log("Request for [$urls[$id]], response Code [$httpCode], \n body: [$results[$id]]");
             }
             
-            $results[$id] = curl_multi_getcontent($ch);
         
             curl_multi_remove_handle($mh, $ch);
         }
