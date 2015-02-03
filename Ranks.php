@@ -79,7 +79,7 @@ class Ranks {
             $wins = (int) $player['1x1ladder']['wins'];
             $losses = (int) $player['1x1ladder']['losses'];
             $player['out']['rate']   = number_format((($wins != 0) ? ($wins / ($wins+$losses)) * 100 : 0), 2);
-            $player['out']['race']   = strtolower($player['1x1ladder']['favoriteRaceP1']);
+            $player['out']['race']   = isset($player['1x1ladder']['favoriteRaceP1']) ? strtolower($player['1x1ladder']['favoriteRaceP1']) : '';
             $player['out']['league'] = strtolower($player['1x1ladder']['league']);
             $player['out']['race_image'] = $this->out_get_race_img_src($player['out']['race']);
             
@@ -129,7 +129,8 @@ class Ranks {
     protected function request_players_info() {
         $urls = array();
         foreach($this->players as $id => $player) {
-            $urls[$id] = $this->config['host'] .'/api/sc2/'. $player['link'] .'/ladders';
+            $urls[$id] = $this->config['host'] .'/sc2/'. $player['link'] .'/ladders';
+            $urls[$id] .= '?apikey=' . $this->config['api-key'];
             //$this->log('requesting player ' . $urls[$id]);
         }
         
@@ -154,7 +155,8 @@ class Ranks {
             if ($player['1x1ladder']['ladderId'] === null) {
                 continue;
             }
-            $urls[$id] = $this->config['host'] .'/api/sc2/ladder/' . $player['1x1ladder']['ladderId'];
+            $urls[$id] = $this->config['host'] .'/sc2/ladder/' . $player['1x1ladder']['ladderId'];
+            $urls[$id] .= '?apikey=' . $this->config['api-key'];
             //$this->log('requesting ladder ' . $urls[$id] . ' for player ' . $player['link']);
         }
         
@@ -253,6 +255,7 @@ class Ranks {
         foreach($urls as $id => $url) {
             $curly[$id] = curl_init();
             
+            curl_setopt($curly[$id], CURLOPT_SSL_VERIFYPEER, false);
             curl_setopt($curly[$id], CURLOPT_URL, $url);
             curl_setopt($curly[$id], CURLOPT_RETURNTRANSFER, true);
             

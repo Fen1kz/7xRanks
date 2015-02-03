@@ -1,7 +1,8 @@
 <?php
 
 return array(
-    'host'             => 'eu.battle.net',
+    'host'             => 'https://eu.api.battle.net',
+    'api-key'          => '',
     'matchMakingQueue' => 'HOTS_SOLO',
     'output' => array(
         'file'   => '7x_roster.html',

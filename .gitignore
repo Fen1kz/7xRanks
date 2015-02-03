@@ -1,6 +1,7 @@
-roster.php
-template.php
-config.php
+/roster.php
+/template.php
+/config.php
+/nbproject/
+/rating/
 *.html
-nbproject/
-rating/
+*.log
